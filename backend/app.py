@@ -14,8 +14,9 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Enable CORS for all origins in development
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # Parse comma-separated allowed origins (e.g. multiple frontend URLs)
+    allowed_origins = [o.strip() for o in Config.ALLOWED_ORIGINS.split(",")]
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}}, supports_credentials=True)
 
     # Register Blueprints
     app.register_blueprint(auth_bp)

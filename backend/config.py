@@ -11,3 +11,5 @@ class Config:
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/studybuddy")
     DEBUG = os.getenv("FLASK_DEBUG", "True").lower() in ("true", "1", "t")
     PORT = int(os.getenv("PORT", 5000))
+    # Comma-separated list of allowed frontend origins (set in production)
+    ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")

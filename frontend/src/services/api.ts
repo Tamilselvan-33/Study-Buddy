@@ -1,8 +1,14 @@
 import axios from 'axios';
 import type { ApiResponse } from '../types';
 
+// In production, VITE_API_BASE_URL points to the deployed Flask backend.
+// In development, Vite proxy rewrites /api → http://localhost:5000/api automatically.
+const baseURL = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
