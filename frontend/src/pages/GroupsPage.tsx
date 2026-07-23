@@ -9,6 +9,9 @@ import { Card } from '../components/ui/Card';
 import { Skeleton } from '../components/ui/Skeleton';
 import { GroupDetail } from '../components/groups/GroupDetail';
 import { CreateGroupModal } from '../components/groups/CreateGroupModal';
+import { InvitationsInbox } from '../components/groups/InvitationsInbox';
+import { inviteService } from '../services/inviteService';
+import { Bell } from 'lucide-react';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -227,7 +230,7 @@ const EmptyMyGroups: React.FC<{ onExplore: () => void; onCreate: () => void }> =
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-type Tab = 'my-groups' | 'explore';
+type Tab = 'my-groups' | 'explore' | 'invitations';
 
 export const GroupsPage: React.FC = () => {
   const { user } = useAuth();
@@ -241,6 +244,7 @@ export const GroupsPage: React.FC = () => {
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [exploreSearch, setExploreSearch] = useState('');
+  const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
 
   const currentUserId = user?.id ?? '';
 
@@ -273,13 +277,24 @@ export const GroupsPage: React.FC = () => {
     [showToast]
   );
 
+  const fetchPendingCount = useCallback(async () => {
+    try {
+      const count = await inviteService.getPendingCount();
+      setPendingInvitesCount(count);
+    } catch {
+      // silently ignore
+    }
+  }, []);
+
   useEffect(() => {
     loadMyGroups();
-  }, [loadMyGroups]);
+    fetchPendingCount();
+  }, [loadMyGroups, fetchPendingCount]);
 
   useEffect(() => {
     if (activeTab === 'explore') loadExplore();
-  }, [activeTab, loadExplore]);
+    if (activeTab === 'invitations') fetchPendingCount();
+  }, [activeTab, loadExplore, fetchPendingCount]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -367,11 +382,11 @@ export const GroupsPage: React.FC = () => {
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 tab-bar-bg rounded-xl w-fit">
-          {(['my-groups', 'explore'] as Tab[]).map((tab) => (
+          {(['my-groups', 'explore', 'invitations'] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`relative px-5 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`relative px-5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
                 activeTab === tab
                   ? 'text-[var(--text-primary)]'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
@@ -384,8 +399,20 @@ export const GroupsPage: React.FC = () => {
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}
-              <span className="relative z-10 capitalize">
-                {tab === 'my-groups' ? `My Groups (${myGroups.length})` : 'Explore'}
+              <span className="relative z-10 capitalize flex items-center gap-1.5">
+                {tab === 'my-groups' && `My Groups (${myGroups.length})`}
+                {tab === 'explore' && 'Explore'}
+                {tab === 'invitations' && (
+                  <>
+                    <Bell className="w-3.5 h-3.5 inline" />
+                    Invitations
+                    {pendingInvitesCount > 0 && (
+                      <span className="bg-[var(--accent)] text-[var(--text-on-accent)] text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">
+                        {pendingInvitesCount}
+                      </span>
+                    )}
+                  </>
+                )}
               </span>
             </button>
           ))}
@@ -415,9 +442,24 @@ export const GroupsPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Grid */}
+        {/* Grid / Invitations Content */}
         <AnimatePresence mode="wait">
-          {isLoading ? (
+          {activeTab === 'invitations' ? (
+            <motion.div
+              key="invitations"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-2xl"
+            >
+              <InvitationsInbox
+                onCountChange={(count) => {
+                  setPendingInvitesCount(count);
+                  loadMyGroups();
+                }}
+              />
+            </motion.div>
+          ) : isLoading ? (
             <motion.div
               key="skeleton"
               initial={{ opacity: 0 }}

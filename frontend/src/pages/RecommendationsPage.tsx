@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useTransition } from 'react';
-import { Sparkles, Search, Filter, RefreshCw, Compass, Users } from 'lucide-react';
+import { Sparkles, Search, RefreshCw, Filter, Compass, Users } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { matchingService } from '../services/matchingService';
 import { PartnerCard } from '../components/matching/PartnerCard';
 import { MatchExplanationModal } from '../components/matching/MatchExplanationModal';
+import { InviteToGroupModal } from '../components/groups/InviteToGroupModal';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Button } from '../components/ui/Button';
 import type { MatchRecommendation } from '../types';
@@ -37,6 +38,8 @@ export const RecommendationsPage: React.FC = () => {
 
   // Selected match modal state
   const [selectedMatch, setSelectedMatch] = useState<MatchRecommendation | null>(null);
+  // Invite modal state
+  const [inviteTarget, setInviteTarget] = useState<{ userId: string; name: string } | null>(null);
 
   const fetchRecommendations = async () => {
     setIsLoading(true);
@@ -65,8 +68,8 @@ export const RecommendationsPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, selectedSubject, selectedSkill, minScore, sortBy]);
 
-  const handleInvite = (_userId: string, name: string) => {
-    showToast(`Invitation sent to ${name}! They will be notified in their invitations.`, 'success');
+  const handleInvite = (userId: string, name: string) => {
+    setInviteTarget({ userId, name });
   };
 
   return (
@@ -250,6 +253,15 @@ export const RecommendationsPage: React.FC = () => {
         onClose={() => setSelectedMatch(null)}
         onInvite={handleInvite}
       />
+
+      {/* Invite to Group Modal */}
+      {inviteTarget && (
+        <InviteToGroupModal
+          inviteeId={inviteTarget.userId}
+          inviteeName={inviteTarget.name}
+          onClose={() => setInviteTarget(null)}
+        />
+      )}
     </div>
   );
 };

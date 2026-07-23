@@ -6,6 +6,14 @@ import type { ApiResponse, StudyGroup, GroupTask, GroupResource, GroupMessage } 
 export const fetchMyGroups = (): Promise<ApiResponse<{ groups: StudyGroup[] }>> =>
   api.get('/groups');
 
+// Convenience object import for components that prefer named object syntax
+export const groupService = {
+  getMyGroups: async (): Promise<StudyGroup[]> => {
+    const res: any = await api.get('/groups');
+    return res?.data?.groups ?? [];
+  },
+};
+
 export const exploreGroups = (subject?: string): Promise<ApiResponse<{ groups: StudyGroup[] }>> =>
   api.get('/groups/explore', { params: subject ? { subject } : {} });
 

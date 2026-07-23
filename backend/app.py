@@ -9,6 +9,7 @@ from routes.user_routes import user_bp
 from routes.matching_routes import matching_bp
 from routes.group_routes import group_bp
 from routes.progress_routes import progress_bp
+from routes.invite_routes import invite_bp
 
 def create_app():
     app = Flask(__name__)
@@ -24,6 +25,7 @@ def create_app():
     app.register_blueprint(matching_bp)
     app.register_blueprint(group_bp)
     app.register_blueprint(progress_bp)
+    app.register_blueprint(invite_bp)
 
     # Health Check Endpoint
     @app.route("/api/health", methods=["GET"])
