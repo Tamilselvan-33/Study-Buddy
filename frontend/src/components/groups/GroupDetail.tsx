@@ -14,19 +14,25 @@ import { Skeleton } from '../ui/Skeleton';
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 
-const timeAgo = (iso: string): string => {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+const formatLocalTime = (iso: string): string => {
+  const utcIso = iso.endsWith('Z') ? iso : `${iso}Z`;
+  const date = new Date(utcIso);
+  const now = new Date();
+  
+  const isToday = date.toDateString() === now.toDateString();
+  const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  
+  if (isToday) {
+    return timeStr;
+  }
+  
+  const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return `${dateStr}, ${timeStr}`;
 };
 
 const formatDate = (iso?: string): string => {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return new Date(iso.endsWith('Z') ? iso : `${iso}Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 const categoryColors: Record<string, string> = {
@@ -126,7 +132,7 @@ const ChatPanel: React.FC<{ groupId: string; currentUserId: string }> = ({
                 </div>
                 <div className={`flex flex-col gap-0.5 max-w-[70%] ${isMe ? 'items-end' : ''}`}>
                   <span className="text-[10px] text-[var(--text-muted)] px-1">
-                    {isMe ? 'You' : msg.senderName} · {timeAgo(msg.timestamp)}
+                    {isMe ? 'You' : msg.senderName} · {formatLocalTime(msg.timestamp)}
                   </span>
                   <div
                     className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
